@@ -2,6 +2,39 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_debug_dr_enable"
+        android:icon="@drawable/ic_action_debug_dr_enable"
+        android:title="@string/debug_dr_enable_button_title"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_debug_dr_disable"
+        android:icon="@drawable/ic_action_debug_dr_disable"
+        android:title="@string/debug_dr_disable_button_title"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_reset_alg"
+        android:icon="@drawable/ic_action_resetalg"
+        android:title="@string/reset_alg_button_title"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_mga_on"
+        android:title="@string/mga_on_button_title"
+        android:icon="@drawable/ic_mgaon"
+        app:showAsAction="always"
+        />
+    <item
+        android:id="@+id/action_mga_off"
+        android:title="@string/mga_off_button_title"
+        android:icon="@drawable/ic_mgao"
+        app:showAsAction="always"
+        />
+    <item
+        android:id="@+id/action_reset_odo"
+        android:title="@string/reset_odo_button_title"
+        android:icon="@drawable/ic_odo_reset"
+        app:showAsAction="always"
+        />
+    <item
         android:id="@+id/action_rec"
         android:title="@string/rec_button_title"
         android:icon="@drawable/ic_rec"

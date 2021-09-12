@@ -5,6 +5,11 @@ import android.location.Location;
 
 import com.microntek.android.gps.usb.provider.USBGpsApplication;
 
+/**
+ *　未実装
+ *
+ * @author Kamabokoz
+ */
 public class UbxNotImplement extends UbxData {
 
     private static final String LOG_TAG = UbxNotImplement.class.getSimpleName();

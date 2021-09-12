@@ -3,6 +3,11 @@ package com.microntek.android.gps.ubx.data;
 import android.location.Location;
 import android.os.Bundle;
 
+/**
+ *　NAV-ODO
+ *
+ * @author Kamabokoz
+ */
 public class UbxNavOdo extends UbxData {
 
     private static final String LOG_TAG = UbxNavOdo.class.getSimpleName();

@@ -3,24 +3,24 @@ package com.microntek.android.gps.ubx.data;
 import android.location.Location;
 
 /**
- *　RESET-ODO
+ *　ESF-RESETALG
  *
  * @author Kamabokoz
  */
-public class UbxNavResetOdo extends UbxData {
+public class UbxEsfResetAlg extends UbxData {
 
-    private static final String LOG_TAG = UbxNavResetOdo.class.getSimpleName();
+    private static final String LOG_TAG = UbxEsfResetAlg.class.getSimpleName();
 
     private static final byte[] base =
-            {(byte) 0xB5, (byte) 0x62, (byte) 0x01, (byte) 0x10 // header
+            {(byte) 0xB5, (byte) 0x62, (byte) 0x10, (byte) 0x13 // header
                     , (byte) 0x00, (byte) 0x00 // len
-                    , (byte) 0x11, (byte) 0x34}; // checksum
+                    , (byte) 0x23, (byte) 0x79}; // checksum
 
-    public UbxNavResetOdo(byte[] data) {
+    public UbxEsfResetAlg(byte[] data) {
         super(data);
     }
 
-    public UbxNavResetOdo() {
+    public UbxEsfResetAlg() {
         byte[] data = (byte[])base.clone();
         this.data = data;
     }

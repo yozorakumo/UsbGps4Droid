@@ -1,6 +1,8 @@
 package com.microntek.android.gps.usb.provider.util;
 import android.util.Log;
 
+import com.microntek.android.gps.usb.provider.BuildConfig;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -43,13 +45,13 @@ public class SuperuserManager {
                 result = process.waitFor();
 
                 if(result != 0){ //error executing command
-                    Log.d(TAG, "result code : " + result);
+                    if (BuildConfig.DEBUG) Log.d(TAG, "result code : " + result);
                     String line;
                     BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
 
                     try {
                         while ((line = bufferedReader.readLine()) != null){
-                            Log.d(TAG, "Error: " + line);
+                            if (BuildConfig.DEBUG) Log.d(TAG, "Error: " + line);
                         }
                     } catch (IOException e) {
                         e.printStackTrace();

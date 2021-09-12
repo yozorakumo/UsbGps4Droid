@@ -60,6 +60,8 @@ import com.microntek.android.gps.usb.provider.R;
 import com.microntek.android.gps.usb.provider.ui.GpsInfoActivity;
 import com.microntek.android.gps.usb.provider.ui.USBGpsSettingsFragment;
 
+import static android.content.Intent.ACTION_SCREEN_OFF;
+
 /**
  * A Service used to replace Android internal GPS with a USB GPS and/or write GPS NMEA data in a File.
  *
@@ -80,6 +82,22 @@ public class USBGpsProviderService extends Service implements USBGpsManager.UbxL
             "com.microntek.android.gps.usb.provider.action.CONFIGURE_SIRF_GPS";
     public static final String ACTION_ENABLE_SIRF_GPS =
             "com.microntek.android.gps.usb.provider.action.ENABLE_SIRF_GPS";
+    public static final String ACTION_RESET_ODO =
+            "com.microntek.android.gps.usb.provider.action.RESET_ODO";
+    public static final String ACTION_RESET_ALG =
+            "com.microntek.android.gps.usb.provider.action.RESET_ALG";
+
+    public static final String ACTION_DEBUG_DR_ENABLE =
+            "com.microntek.android.gps.usb.provider.action.DEBUG_DR_ENABLE";
+    public static final String ACTION_DEBUG_DR_DISABLE =
+            "com.microntek.android.gps.usb.provider.action.DEBUG_DR_DISABLE";
+
+    public static final String ACTION_COLD_START =
+            "com.microntek.android.gps.usb.provider.action.COLD_START";
+    public static final String ACTION_MGA_ON =
+            "com.microntek.android.gps.usb.provider.action.MGA_ON";
+    public static final String ACTION_MGA_OFF =
+            "com.microntek.android.gps.usb.provider.action.MGA_OFF";
 
     public static final String PREF_START_GPS_PROVIDER = "startGps";
     public static final String PREF_START_ON_BOOT = "startOnBoot";
@@ -123,6 +141,10 @@ public class USBGpsProviderService extends Service implements USBGpsManager.UbxL
 
     public static final String PREF_UBX_HNR = "highNavRate";
     public static final String PREF_UBX_RESETODO = "resetOdo";
+    public static final String PREF_UBX_ASSISTNOW_ONLINE = "AssistNowOnline";
+    public static final String PREF_UBX_ASSISTNOW_OFFLINE = "AssistNowOffline";
+    public static final String PREF_UBX_ASSISTNOW_TOKEN = "AssistNowToken";
+    public static final String PREF_UBX_ASSISTNOW_CONTROL = "AssistNowControl";
 
     private USBGpsManager gpsManager = null;
 //    private PrintWriter writer;
@@ -148,10 +170,10 @@ public class USBGpsProviderService extends Service implements USBGpsManager.UbxL
                     PreferenceManager.getDefaultSharedPreferences(context);
             if (BuildConfig.DEBUG) Log.d(LOG_TAG, intent.getAction());
 
-            if (intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED) &&
-                    sharedPreferences.getBoolean(PREF_START_ON_BOOT, false) ||
-                intent.getAction().equals(Intent.ACTION_SCREEN_ON) &&
-                    sharedPreferences.getBoolean(PREF_START_ON_SCREEN_ON, false))  {
+            if ((intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED) &&
+                    sharedPreferences.getBoolean(PREF_START_ON_BOOT, false)) ||
+                    (intent.getAction().equals(Intent.ACTION_SCREEN_ON) &&
+                    sharedPreferences.getBoolean(PREF_START_ON_SCREEN_ON, false)))  {
 
                 // 直近60秒以内に処理していない場合のみ実行
                 synchronized (lock) {
@@ -189,6 +211,12 @@ public class USBGpsProviderService extends Service implements USBGpsManager.UbxL
                         context.startService(intent2);
                     }
                 }
+            }
+            else if (intent.getAction().equals(ACTION_SCREEN_OFF) &&
+                            sharedPreferences.getBoolean(PREF_START_ON_SCREEN_ON, false))  {
+                Intent intent2 = new Intent(context, USBGpsProviderService.class);
+                intent2.setAction(ACTION_STOP_GPS_PROVIDER);
+                context.startService(intent2);
             }
         }
     }
@@ -278,6 +306,8 @@ public class USBGpsProviderService extends Service implements USBGpsManager.UbxL
                     }
                 } else {
                     stopSelf();
+                    //startService(new Intent(this, USBGpsProviderService.class)
+                    //    .setAction(intent.getAction()));
                 }
 
 //            } else {
@@ -317,6 +347,45 @@ public class USBGpsProviderService extends Service implements USBGpsManager.UbxL
                 } else {
                     gpsManager.enableSirfConfig(sharedPreferences);
                 }
+            }
+        } else if (ACTION_RESET_ODO.equals(intent.getAction())) {
+            if (gpsManager != null) {
+                showToast("Reset Current Odo");
+                gpsManager.sendNavOdoReset();
+                //gpsManager.sendCfgReset();
+            }
+        } else if (ACTION_RESET_ALG.equals(intent.getAction())) {
+            if (gpsManager != null) {
+                showToast("Reset ESFALG");
+                gpsManager.sendEsfResetAlg();
+                //gpsManager.sendCfgReset();
+            }
+        } else if (ACTION_DEBUG_DR_ENABLE.equals(intent.getAction())) {
+            if (gpsManager != null) {
+                showToast("DR Debug Start");
+                gpsManager.sendCfgNavX5(50);
+                //gpsManager.sendCfgReset();
+            }
+        } else if (ACTION_DEBUG_DR_DISABLE.equals(intent.getAction())) {
+            if (gpsManager != null) {
+                showToast("DR Debug End");
+                gpsManager.sendCfgNavX5(15);
+                //gpsManager.sendCfgReset();
+            }
+        }else if (ACTION_COLD_START.equals(intent.getAction())) {
+            if (gpsManager != null) {
+                showToast("Reset Ublox Receiver");
+                gpsManager.sendCfgReset();
+            }
+        } else if (ACTION_MGA_ON.equals(intent.getAction())) {
+            if (gpsManager != null) {
+                showToast("Request AssistNow Online");
+                gpsManager.applyAssistNowOnline();
+            }
+        } else if (ACTION_MGA_OFF.equals(intent.getAction())) {
+            if (gpsManager != null) {
+                showToast("Request AssistNow Offline");
+                gpsManager.applyAssistNowOffline();
             }
         }
         return Service.START_NOT_STICKY;

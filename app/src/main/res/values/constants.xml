@@ -71,6 +71,10 @@
     <string name="defaultGpsDeviceSpeed">4800</string>
     <string name="autoGpsDeviceSpeed">auto</string>
 
+    <string name="last_latitude_key">lastLatitude</string>
+    <string name="last_longitude_key">lastLongitude</string>
+    <string name="last_mgaOnline_key">lastMgaOnline</string>
+    <string name="last_mgaOffline_key">lastMgaOffline</string>
 
     <string name="sirf_nmea_gga_on">PSRF103,00,00,01,01</string>
     <string name="sirf_nmea_gga_off">PSRF103,00,00,00,01</string>

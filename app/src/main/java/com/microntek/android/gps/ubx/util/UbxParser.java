@@ -35,16 +35,27 @@ import android.preference.PreferenceManager;
 import android.text.TextUtils.SimpleStringSplitter;
 import android.util.Log;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.microntek.android.gps.ubx.data.Pvt;
 import com.microntek.android.gps.ubx.data.UbxData;
 import com.microntek.android.gps.usb.provider.BuildConfig;
 import com.microntek.android.gps.usb.provider.R;
 import com.microntek.android.gps.usb.provider.USBGpsApplication;
+import com.microntek.android.gps.usb.provider.driver.InputStreamVolleyRequest;
+import com.microntek.android.gps.usb.provider.driver.USBGpsManager;
 import com.microntek.android.gps.usb.provider.driver.USBGpsProviderService;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -52,11 +63,9 @@ import java.util.regex.Pattern;
 ;
 
 /**
- * This class is used to parse NMEA sentences an generate the Android Locations when there is a new GPS FIX.
- * It manage also the Mock Location Provider (enable/disable/fix & status notification)
- * and can compute the the checksum of a NMEA sentence.
+ * UBXをParseするクラス
  *
- * @author Herbert von Broeuschmeul
+ * @author Kamabokoz
  */
 public class UbxParser {
     /**
@@ -70,6 +79,9 @@ public class UbxParser {
 
     private long fixTime = -1;
     private long fixTimestamp;
+    private long lastLocSendTime = -1;
+
+    //private RequestQueue queue = null;
 
     private LocationManager lm;
     private boolean mockGpsAutoEnabled = false;
@@ -81,12 +93,15 @@ public class UbxParser {
     private Location fix = null;
     private long lastSentenceTime = -1;
 
+    private SharedPreferences preferences = null;
     private boolean enableSpeedParam = false;
 
     public UbxParser(Context context) {
          this.appContext = context;
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        preferences = PreferenceManager.getDefaultSharedPreferences(context);
         enableSpeedParam = preferences.getBoolean(USBGpsProviderService.PREF_USE_SPEED, true);
+
+        //queue = Volley.newRequestQueue(context);
     }
 
     public void setLocationManager(LocationManager lm) {
@@ -256,6 +271,15 @@ public class UbxParser {
         fixTime = -1;
 
         if (fix != null) {
+            // AssistNow用に最終位置情報を記録
+            preferences.edit().putString(
+                            appContext.getString(R.string.last_latitude_key),
+                            String.valueOf(fix.getLatitude())
+                    ).putString(
+                            appContext.getString(R.string.last_longitude_key),
+                            String.valueOf(fix.getLongitude())
+                    )
+                    .apply();
             ((USBGpsApplication) appContext).notifyNewLocation(fix);
             log("New Fix: " + System.currentTimeMillis() + " " + fix);
 
@@ -298,7 +322,9 @@ public class UbxParser {
                         mockLocationProvider
                 );
             }
-            this.fix = null;
+            // ここで位置情報をクリアしてしまうと、
+            // 別スレッドでparse中に接続不安定となった場合にnull参照が発生するためクリアをやめる
+            //this.fix = null;
             this.mockStatus = status;
         }
     }
@@ -337,6 +363,7 @@ public class UbxParser {
                         // 位置情報を反映
                         fixTime = time;
                         notifyFix(fix);
+
                     }
                 }
                 else {

@@ -3,6 +3,11 @@ package com.microntek.android.gps.ubx.data;
 import android.location.Location;
 import android.os.Bundle;
 
+/**
+ * HNRを設定するためのメッセージ（送信用）
+ *
+ * @author Kamabokoz
+ */
 public class UbxCfgHnr extends UbxData {
 
     private static final String LOG_TAG = UbxCfgHnr.class.getSimpleName();

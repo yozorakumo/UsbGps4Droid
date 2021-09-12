@@ -34,18 +34,32 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.microntek.android.gps.nmea.util.NmeaParser;
 import com.microntek.android.gps.sirf.util.SirfUtils;
 import com.microntek.android.gps.ubx.data.UbxCfgHnr;
+import com.microntek.android.gps.ubx.data.UbxCfgRst;
 import com.microntek.android.gps.ubx.data.UbxData;
+import com.microntek.android.gps.ubx.data.UbxEsfResetAlg;
+import com.microntek.android.gps.ubx.data.UbxCfgNavX5;
+import com.microntek.android.gps.ubx.data.UbxMga;
+import com.microntek.android.gps.ubx.data.UbxMgaAck;
 import com.microntek.android.gps.ubx.data.UbxNavResetOdo;
 import com.microntek.android.gps.ubx.util.UbxFactory;
 import com.microntek.android.gps.ubx.util.UbxParser;
@@ -54,6 +68,7 @@ import com.microntek.android.gps.usb.provider.R;
 import com.microntek.android.gps.usb.provider.USBGpsApplication;
 import com.microntek.android.gps.usb.provider.ui.GpsInfoActivity;
 import com.microntek.android.gps.usb.provider.util.SuperuserManager;
+import com.microntek.android.gps.util.RetryPolicyCustomize;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -84,6 +99,7 @@ import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 
 /**
@@ -266,8 +282,8 @@ public class USBGpsManager {
             PrintStream tmpOut2 = null;
 
             tmpIn = new InputStream() {
-                private byte[] buffer = new byte[128];
-                private byte[] usbBuffer = new byte[64]; // HNRが有効だと大きくする必要有り？
+                private byte[] buffer = new byte[512];
+                private byte[] usbBuffer = new byte[256]; // HNRが有効だと大きくする必要有り？
                 private byte[] oneByteBuffer = new byte[1];
                 private ByteBuffer bufferWrite = ByteBuffer.wrap(buffer);
                 private ByteBuffer bufferRead = (ByteBuffer) ByteBuffer.wrap(buffer).limit(0);
@@ -286,7 +302,7 @@ public class USBGpsManager {
                     } else {
                         // TODO : if nb = 0 then we have a pb
                         b = -1;
-                        Log.e(LOG_TAG, "data read() error code: " + nb);
+                        if (BuildConfig.DEBUG) Log.e(LOG_TAG, "data read() error code: " + nb);
                     }
                     //if (b <= 0) {
                     //    Log.e(LOG_TAG, "data read() error: char " + b);
@@ -351,8 +367,8 @@ public class USBGpsManager {
                             bufferRead.limit(bufferWrite.position());
 //                            if (BuildConfig.DEBUG || debug) Log.d(LOG_TAG, "data read: nb: " + n + " current: " + bufferRead.position() + " limit: " + bufferRead.limit() + " " + Arrays.toString(bufferRead.array()));
                         } else {
-                            if (BuildConfig.DEBUG || debug)
-                                Log.e(LOG_TAG, "data read(buffer...) error: " + nb );
+//                            if (BuildConfig.DEBUG || debug)
+//                                Log.e(LOG_TAG, "data read(buffer...) error: " + nb );
                         }
                     }
                     if (bufferRead.hasRemaining()) {
@@ -408,7 +424,7 @@ public class USBGpsManager {
             };
 
             tmpOut = new OutputStream() {
-                private byte[] buffer = new byte[128];
+                private byte[] buffer = new byte[1024];
                 private byte[] usbBuffer = new byte[64];
                 private byte[] oneByteBuffer = new byte[1];
                 private ByteBuffer bufferWrite = ByteBuffer.wrap(buffer);
@@ -496,17 +512,17 @@ public class USBGpsManager {
                     Log.e(LOG_TAG, "error while getting usb output streams", e);
             }
 
-            // debug ログフォルダにdebug.ubxが在ればUSBではなくファイルから読込み
-            isDebugMode = false;
-            File dbgFile = new File(sharedPreferences.getString(USBGpsProviderService.PREF_TRACK_FILE_DIR, ""), "debug.ubx");
-            if(dbgFile.exists()) {
-                try {
-                    tmpIn = new FileInputStream(dbgFile);
-                    isDebugMode = true;
-                }catch(Exception e){
-
-                }
-            }
+//            // debug ログフォルダにdebug.ubxが在ればUSBではなくファイルから読込み
+//            isDebugMode = false;
+//            File dbgFile = new File(sharedPreferences.getString(USBGpsProviderService.PREF_TRACK_FILE_DIR, ""), "debug.ubx");
+//            if(dbgFile.exists()) {
+//                try {
+//                    tmpIn = new FileInputStream(dbgFile);
+//                    isDebugMode = true;
+//                }catch(Exception e){
+//
+//                }
+//            }
             in = tmpIn;
             out = tmpOut;
             out2 = tmpOut2;
@@ -680,8 +696,11 @@ public class USBGpsManager {
                                     buffPos = 0;
                                     ubxBuff[buffPos] = (byte)hex;
                                 }
-//                                else
-//                                    log("data: not header " + hex);
+                                else {
+                                    ubx = factory.createBrokenUbx();
+                                    parser.parseUbxSentence(ubx);
+                                }
+
                             } else if(ubxMsgHeader1 && !ubxMsgHeader2){
                                 if(hex == 0x62) {
                                     // UBX確定
@@ -723,7 +742,9 @@ public class USBGpsManager {
                                         int id = ubxBuff[3];
                                         log("data: checksum error calc_ck_a:" + ck[0] + " ck_a:" + data_ck_a + " calc_ck_b:" + ck[1]+ " ck_b:" + data_ck_b + " buffPos:" + buffPos + " class:" + cls + " id:" + id + " len:" + len);
                                         ubxMsgHeader1 = false;
-                                        continue;
+                                        //continue;
+                                        ubx = factory.createBrokenUbx();
+                                        parser.parseUbxSentence(ubx);
                                     }
 //                                    else {
 //                                        int cls = ubxBuff[2];
@@ -752,6 +773,8 @@ public class USBGpsManager {
                                     // UBXではないので読み飛ばし
                                     log("data: not header2 " + hex);
                                     ubxMsgHeader1 = false;
+                                    ubx = factory.createBrokenUbx();
+                                    parser.parseUbxSentence(ubx);
                                 }
                             }
 
@@ -766,6 +789,20 @@ public class USBGpsManager {
                         //Log.v(LOG_TAG, "data: "+System.currentTimeMillis()+" "+s);
 //                        if (notifyNmeaSentence(s + "\r\n")) {
                         ubx.logMsg();//debug
+
+/*                        // Flowコントロールありの場合はAssistNowの応答時にMGAのデータを送信
+                        if(mgaFlowControl && ubx instanceof UbxMgaAck) {
+                            log("UbxMga len: " + UbxMga.length());
+                            byte[] mgaData = UbxMga.popMgaData();
+
+                            Toast.makeText(appContext, "Aid" + UbxMga.length(), Toast.LENGTH_SHORT);
+
+                            if(mgaData != null)
+                              connectedGps.write(mgaData);
+                            else
+                                Toast.makeText(appContext, "Finish", Toast.LENGTH_SHORT);
+                        }*/
+
                         if (notifyUbxSentence(ubx)) {
                             ready = true;
 
@@ -816,18 +853,34 @@ public class USBGpsManager {
          */
         public void write(byte[] buffer) {
             try {
-                do {
-                    Thread.sleep(100);
-                } while ((enabled) && (!ready) && (!closed));
-                if ((enabled) && (ready) && (!closed)) {
+                if ((enabled) && (!closed)) {
                     out.write(buffer);
                     out.flush();
                 }
-            } catch (IOException | InterruptedException e) {
+            } catch (IOException e) {
                 if (BuildConfig.DEBUG || debug)
                     Log.e(LOG_TAG, "Exception during write", e);
             }
         }
+//        /**
+//         * Write to the connected OutStream.
+//         *
+//         * @param buffer The bytes to write
+//         */
+//        public void write(byte[] buffer) {
+//            try {
+//                while ((enabled) && (!ready) && (!closed)) {
+//                    Thread.sleep(100);
+//                }
+//                if ((enabled) && (ready) && (!closed)) {
+//                    out.write(buffer);
+//                    out.flush();
+//                }
+//            } catch (IOException | InterruptedException e) {
+//                if (BuildConfig.DEBUG || debug)
+//                    Log.e(LOG_TAG, "Exception during write", e);
+//            }
+//        }
 
         /**
          * Write to the connected OutStream.
@@ -934,6 +987,9 @@ public class USBGpsManager {
     private int gpsProductId = 8963;
     private int gpsVendorId = 1659;
 
+    private boolean mgaFlowControl = false;
+    public static RequestQueue queue; //todo: シングルトンにする
+
     /**
      * @param callingService
      * @param vendorId
@@ -949,6 +1005,7 @@ public class USBGpsManager {
         this.appContext = callingService.getApplicationContext();
         //this.parser = new NmeaParser(10f, this.appContext);
         this.parser = new UbxParser(this.appContext);
+        this.queue = Volley.newRequestQueue(this.appContext);
 
         locationManager = (LocationManager) callingService.getSystemService(Context.LOCATION_SERVICE);
 
@@ -987,6 +1044,8 @@ public class USBGpsManager {
                 .setContentText(appContext.getString(R.string.service_closed_because_connection_problem_notification));
 
         usbManager = (UsbManager) callingService.getSystemService(Service.USB_SERVICE);
+
+        //mgaFlowControl = sharedPreferences.getBoolean(USBGpsProviderService.PREF_UBX_ASSISTNOW_CONTROL, false);
 
     }
 
@@ -1910,9 +1969,211 @@ public class USBGpsManager {
         }
     }
 
+    public boolean sendNavOdoReset() {
+        if ((enabled) && ((connected) && (connectedGps != null) && (connectedGps.isReady()))) {
+            UbxData ubx = new UbxNavResetOdo();
+            connectedGps.write(ubx.getData());
+            return true;
+        }
+        return false;
+    }
+
+    public boolean sendEsfResetAlg() {
+        if ((enabled) && ((connected) && (connectedGps != null) && (connectedGps.isReady()))) {
+            UbxData ubx = new UbxEsfResetAlg();
+            connectedGps.write(ubx.getData());
+            return true;
+        }
+        return false;
+    }
+
+    public boolean sendCfgNavX5(int mincno) {
+        if ((enabled) && ((connected) && (connectedGps != null) && (connectedGps.isReady()))) {
+            UbxData ubx = new UbxCfgNavX5(mincno);
+            connectedGps.write(ubx.getData());
+            return true;
+        }
+        return false;
+    }
+
+    public boolean sendCfgReset() {
+        if ((enabled) && ((connected) && (connectedGps != null) && (connectedGps.isReady()))) {
+            UbxData ubx = new UbxCfgRst();
+            connectedGps.write(ubx.getData());
+            return true;
+        }
+        return false;
+    }
+
+    public boolean applyAssistNowOnline() {
+        if ((enabled) && ((connected) && (connectedGps != null) && (connectedGps.isReady()))) {
+            //Toast.makeText(appContext, "Request AssistNowOnline", Toast.LENGTH_SHORT).show();
+            String token = sharedPreferences.getString(appContext.getString(R.string.pref_ubx_an_token_key), null);
+            final String latitude = sharedPreferences.getString(appContext.getString(R.string.last_latitude_key), null);
+            final String longitude = sharedPreferences.getString(appContext.getString(R.string.last_longitude_key), null);
+
+            if(token != null) {
+                StringBuilder sb = new StringBuilder("http://online-live1.services.u-blox.com/GetOnlineData.ashx?token=");
+                sb.append(token).append(";gnss=gps,glo,qzss,bds,gal;datatype=eph,alm");
+                if (latitude != null && longitude != null)
+                    sb.append(";lat=").append(latitude).append(";lon=").append(longitude).append(";pacc=10");
+
+                debugLog("AssistNowOnline request:" + sb.toString());
+
+                // 非同期でMGAサーバと通信
+                InputStreamVolleyRequest request = new InputStreamVolleyRequest(Request.Method.GET, sb.toString(),
+                        new Response.Listener<byte[]>() {
+                            @Override
+                            public void onResponse(final byte[] response) {
+                                try {
+                                    debugLog("AssistNowOnline update start");
+                                    // VolleyRequestの結果はUIスレッド駆動のため別スレッドで反映する
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            applyMgaData(appContext.getString(R.string.last_mgaOnline_key), response);
+                                        }
+                                    }).start();
+                                } catch (Exception e) {
+                                    debugLog("AssistNowOnline request fail");
+                                    e.printStackTrace();
+                                }
+                            }
+                        }, new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        debugLog("AssistNowOnline request network fail");
+                        error.printStackTrace();
+                    }
+                }, null);
+                //request.setRetryPolicy(new RetryPolicyCustomize());
+
+                queue.add(request);
+                //queue.start();
+            }
+
+            return true;
+        }
+        return false;
+    }
+
+    public boolean applyAssistNowOffline() {
+        if ((enabled) && ((connected) && (connectedGps != null) && (connectedGps.isReady()))) {
+            //Toast.makeText(appContext, "Request AssistNowOffline", Toast.LENGTH_SHORT).show();
+            String token = sharedPreferences.getString(appContext.getString(R.string.pref_ubx_an_token_key), null);
+
+            if(token != null) {
+                StringBuilder sb = new StringBuilder("http://offline-live1.services.u-blox.com/GetOfflineData.ashx?token=");
+                sb.append(token).append(";gnss=gps,glo;alm=gps,glo,qzss,bds,gal;period=4;resolution=3");
+
+                debugLog("AssistNowOffline request:" + sb.toString());
+
+                // 非同期でMGAサーバと通信
+                InputStreamVolleyRequest request = new InputStreamVolleyRequest(Request.Method.GET, sb.toString(),
+                        new Response.Listener<byte[]>() {
+                            @Override
+                            public void onResponse(final byte[] response) {
+                                try {
+                                    debugLog("AssistNowOffline update start");
+                                    // VolleyRequestの結果はUIスレッド駆動のため別スレッドで反映する
+                                    new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            applyMgaData(appContext.getString(R.string.last_mgaOffline_key), response);
+                                        }
+                                    }).start();
+
+                                } catch (Exception e) {
+                                    debugLog("AssistNowOffline request fail");
+                                    e.printStackTrace();
+                                }
+                            }
+                        }, new Response.ErrorListener() {
+
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        debugLog("AssistNowOffline request fail network");
+                        error.printStackTrace();
+                    }
+                }, null);
+                // ポリシーを設定すると割り込みエラーとなる？
+                //request.setRetryPolicy(new RetryPolicyCustomize());
+
+                queue.add(request);
+                //queue.start();
+
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private void applyMgaData(String key, byte[] response) {
+        try {
+            if (response != null) {
+                //Toast.makeText(this.callingService, "AssistNow receive size:" + response.length, Toast.LENGTH_SHORT).show();
+                for (int i = 0; i < response.length; i++) {
+                    int hex = response[i];
+                    hex &= 0xFF;
+
+                    if (hex == 0xB5) {
+                        hex = response[i + 1];
+                        hex &= 0xFF;
+                        if (hex == 0x62) {
+                            // UBXバイナリ確定
+                            long len = UbxData.byte2hex(response, i + 4, 2);
+                            int to = i + (int) len + 8;
+
+                            // 異常なデータは中断
+                            if(response.length > to)
+                                break;
+                            byte[] ubx = Arrays.copyOfRange(response, i, to);
+
+                            // Flowコントロール有の場合は応答ごとに送信するため退避
+                            if (mgaFlowControl) {
+                                UbxMga.pushMgaData(ubx);
+                            }
+                            // Flowコントロールなしの場合は一定間隔で送信
+                            else {
+                                connectedGps.write(ubx);
+                                try {
+                                    Thread.sleep(25); // TODO:バッファオーバしない程度に要調整
+                                } catch (InterruptedException e) {
+                                    // 握り潰し
+                                }
+                            }
+                            i = to;
+                        }
+                    }
+                }
+
+                // Flowコントロール有の場合は、先頭1件のみ送信
+                if (mgaFlowControl) {
+                    byte[] mgaData = UbxMga.popMgaData();
+                    if (mgaData != null) {
+                        connectedGps.write(mgaData);
+                    }
+                }
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS", Locale.US);
+                String time = sdf.format(new Date());
+                sharedPreferences.edit().putString(
+                        key,
+                        time
+                ).apply();
+                debugLog("AssistNow request complete");
+                //Toast.makeText(this.callingService, "AssistNow request complete", Toast.LENGTH_SHORT).show();
+            }
+        }
+        catch(Exception e) {
+            debugLog("AssistNow request fail:" + e.getMessage());
+        }
+
+    }
+
     public void enableUbxConfig(final SharedPreferences extra) {
         if (isEnabled()) {
-            notificationPool.execute(new Runnable() {
+            new Thread(new Runnable() {
                 @Override
                 public void run() {
                     while ((enabled) && ((!connected) || (connectedGps == null) || (!connectedGps.isReady()))) {
@@ -1931,12 +2192,21 @@ public class USBGpsManager {
 
                         boolean resetOdo = extra.getBoolean(USBGpsProviderService.PREF_UBX_RESETODO, false);
                         if(resetOdo) {
-                            UbxData ubx = new UbxNavResetOdo();
-                            connectedGps.write(ubx.getData());
+                            sendNavOdoReset();
+                        }
+
+                        boolean anOn = extra.getBoolean(USBGpsProviderService.PREF_UBX_ASSISTNOW_ONLINE, false);
+                        if(anOn) {
+                            applyAssistNowOnline();
+                        }
+
+                        boolean anOff = extra.getBoolean(USBGpsProviderService.PREF_UBX_ASSISTNOW_OFFLINE, false);
+                        if(anOff) {
+                            applyAssistNowOffline();
                         }
                     }
                 }
-            });
+            }).start();
         }
     }
 

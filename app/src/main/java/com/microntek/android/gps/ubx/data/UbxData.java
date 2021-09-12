@@ -5,7 +5,11 @@ import android.util.Log;
 
 import com.microntek.android.gps.usb.provider.BuildConfig;
 
-// UBXバイナリの抽象クラス
+/**
+ *UBXバイナリの抽象クラス
+ *
+ * @author Kamabokoz
+ */
 public abstract class UbxData {
     private static final String LOG_TAG = UbxData.class.getSimpleName();
     protected byte[] data = null;

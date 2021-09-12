@@ -7,6 +7,11 @@ import android.preference.PreferenceManager;
 import com.microntek.android.gps.ubx.data.*;
 import com.microntek.android.gps.usb.provider.driver.USBGpsProviderService;
 
+/**
+ * UBXのバイナリデータを各メッセージに対応したインスタンスに変換
+ *
+ * @author Kamabokoz
+ */
 public class UbxFactory {
     private boolean enableHNR = false;
     private boolean enableSpeedParam = false;
@@ -21,6 +26,10 @@ public class UbxFactory {
         enableAccuracyParam = preferences.getBoolean(USBGpsProviderService.PREF_USE_ACCURACY, true);
     }
 
+    public UbxData createBrokenUbx() {
+        return new UbxBroken();
+    }
+
     // byte配列を各UBXに変換
     public UbxData createUbx(byte[] data) {
         int cls = (int)UbxData.byte2hex(data, UbxData.IDX_CLASS, 1);
@@ -32,6 +41,7 @@ public class UbxFactory {
                     case 0x00: // UBX-HNR-PVT
                         return new UbxHnrPvt(data, enableHNR, enableSpeedParam, enableAccuracyParam);
                 }
+                break;
 
             case 0x01: // UBX-NAV
                 switch (id) {
@@ -49,10 +59,23 @@ public class UbxFactory {
 
             case 0x10: // UBX-ESF
                 switch (id) {
+                    case 0x02: // UBX-ESF-MEAS
+                        return new UbxEsfMeas(data);
                     case 0x10: // UBX-ESF-STATUS
                         return new UbxEsfStatus(data);
+                    case 0x14: // UBX-ESF-ALG
+                        return new UbxEsfAlg(data);
 
                 }
+                break;
+
+            case 0x13: // UBX-MGA
+                switch (id) {
+                    case 0x60: // UBX-MGA-ACK
+                        return new UbxMgaAck(data);
+
+                }
+                break;
         }
         // 未実装
         return new UbxNotImplement(data);

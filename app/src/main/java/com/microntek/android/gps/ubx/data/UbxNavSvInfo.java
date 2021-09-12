@@ -10,6 +10,11 @@ import com.microntek.android.gps.usb.provider.USBGpsApplication;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ *　NAV-SVINFO
+ *
+ * @author Kamabokoz
+ */
 public class UbxNavSvInfo extends UbxData {
 
     private static final String LOG_TAG = UbxNavSvInfo.class.getSimpleName();
@@ -40,9 +45,11 @@ public class UbxNavSvInfo extends UbxData {
             svInfo.put("svName", svidToSvName((int) svid));
             svInfo.put("icon", svidToIcon((int) svid));
 
-            idx = IDX_LEN + 2 + 10 + 12 * i; // cno flags=10 + 12 * i
-            long flags = data[idx] & 0x01;
-            svInfo.put("useFlag", String.valueOf(flags));
+            idx = IDX_LEN + 2 + 10 + 12 * i; // flags Offset=10 + 12 * i
+            long use = data[idx] & 0x01;
+            long eph = data[idx] & 0x08;
+            svInfo.put("useFlag", String.valueOf(use > 0 ? 1: 0));
+            svInfo.put("ephFlag", String.valueOf(eph > 0 ? 1: 0));
 
             idx = IDX_LEN + 2 + 12 + 12 * i; // cno Offset=12 + 12 * i
             long cno = byte2hex(data, idx, 1);
@@ -100,7 +107,8 @@ public class UbxNavSvInfo extends UbxData {
 
     // UBX SVIDをアイコンに変換
     private String svidToIcon(int svid) {
-        String icon = "";
+        // 新しい衛星が増えると落ちるので、暫定で
+        String icon = String.valueOf(R.drawable.unknown);
         if(svid >= 1 && svid <= 32)
             icon = String.valueOf(R.drawable.gps);
         else if(svid >= 120 && svid <= 158)

@@ -7,6 +7,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
+/**
+ *　NAV-SLAS
+ *
+ * @author Kamabokoz
+ */
 public class UbxNavSlas extends UbxData {
 
     private static final String LOG_TAG = UbxNavSlas.class.getSimpleName();

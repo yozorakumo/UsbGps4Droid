@@ -8,6 +8,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
+/**
+ *　NAV-PVT
+ *
+ * @author Kamabokoz
+ */
 public class UbxNavPvt extends UbxData implements Pvt {
 
     private static final String LOG_TAG = UbxNavPvt.class.getSimpleName();
@@ -35,7 +40,7 @@ public class UbxNavPvt extends UbxData implements Pvt {
         idx = IDX_LEN + 2 + 21; // flags Offset=21
         byte flags = data[idx];
 
-        idx = IDX_LEN + 2 + 23; // headVeh Offset=23
+        idx = IDX_LEN + 2 + 23; // numsv Offset=23
         byte useSv = data[idx];
 
         idx = IDX_LEN + 2 + 24; // lon Offset=24
@@ -56,15 +61,17 @@ public class UbxNavPvt extends UbxData implements Pvt {
         idx = IDX_LEN + 2 + 60; // gSpeed Offset=60
         long speed = byte2hex(data, idx, 4);
 
-        idx = IDX_LEN + 2 + 64; // headMot Offset=64
-        long heading = byte2hex(data, idx, 4);
+        //idx = IDX_LEN + 2 + 64; // headMot Offset=64
+        //long heading = byte2hex(data, idx, 4);
 
         idx = IDX_LEN + 2 + 68; // sAcc Offset=68
         long speedAcc = byte2hex(data, idx, 4);
 
-        idx = IDX_LEN + 2 + 72; // headVeh Offset=72
+        idx = IDX_LEN + 2 + 72; // headAcc Offset=72
         long headingAcc = byte2hex(data, idx, 4);
 
+        idx = IDX_LEN + 2 + 84; // headVeh Offset=84
+        long heading = byte2hex(data, idx, 4);
 
         fix.setLatitude((double) lat / 10000000);
         fix.setLongitude((double) lon / 10000000);
@@ -90,9 +97,11 @@ public class UbxNavPvt extends UbxData implements Pvt {
         }
 
         Bundle bundle = fix.getExtras();
+        bundle.putFloat("PvtAccuracy", (float) (acc / 1000.0));
         bundle.putInt(SATELLITE_KEY, (int) useSv);
         bundle.putInt(FIX_STATUS_KEY, (int) status);
         bundle.putInt(SBAS_STATUS_KEY, (int) flags & 0x02);
+        bundle.putDouble("Speed", speed / 100.0);
         fix.setExtras(bundle);
 
         return true;

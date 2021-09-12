@@ -21,6 +21,7 @@
 -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:title="@string/app_name">
     <PreferenceCategory
         android:title="@string/pref_category_device_title"
@@ -112,6 +113,29 @@
         android:persistent="true"
         android:summary="@string/pref_ubx_resetodo_summary"
         android:title="@string/pref_ubx_resetodo_title" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:disableDependentsState="false"
+        android:enabled="true"
+        android:key="@string/pref_ubx_anon_key"
+        android:persistent="true"
+        android:summary="@string/pref_ubx_anon_summary"
+        android:title="@string/pref_ubx_anon_title" />
+    <SwitchPreference
+        android:defaultValue="false"
+        android:disableDependentsState="false"
+        android:enabled="true"
+        android:key="@string/pref_ubx_anoff_key"
+        android:persistent="true"
+        android:summary="@string/pref_ubx_anoff_summary"
+        android:title="@string/pref_ubx_anoff_title" />
+    <EditTextPreference
+        android:key="@string/pref_ubx_an_token_key"
+        android:title="@string/pref_ubx_an_token_title"
+        android:summary="@string/pref_ubx_an_token_summary"
+        android:defaultValue=""
+        />
+
     <PreferenceCategory
         android:title="@string/pref_category_nmea_log_title"
         />

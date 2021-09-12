@@ -139,6 +139,7 @@ public class USBGpsApplication extends Application {
                     val.put("disableCnt", "0");
                 }
                 val.put("useFlag", rec.get("useFlag"));
+                val.put("ephFlag", rec.get("ephFlag"));
                 val.put("cno", rec.get("cno"));
 
                 if(Integer.parseInt(rec.get("cno")) > 0) {
@@ -154,6 +155,7 @@ public class USBGpsApplication extends Application {
                 int i = Integer.parseInt(val.get("disableCnt"));
 
                 val.put("useFlag", "");
+                val.put("ephFlag", "");
                 val.put("cno", "0");
                 val.put("disableCnt", String.valueOf(++i));
             }

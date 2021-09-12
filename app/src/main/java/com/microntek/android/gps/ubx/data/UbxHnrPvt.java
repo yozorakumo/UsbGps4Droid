@@ -9,6 +9,11 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.TimeZone;
 
+/**
+ *　HNR-PVT
+ *
+ * @author Kamabokoz
+ */
 public class UbxHnrPvt extends UbxData implements Pvt {
 
     private static final String LOG_TAG = UbxHnrPvt.class.getSimpleName();
@@ -53,6 +58,9 @@ public class UbxHnrPvt extends UbxData implements Pvt {
         idx = IDX_LEN + 2 + 36; // gSpeed Offset=36
         long speed = byte2hex(data, idx, 4);
 
+        //idx = IDX_LEN + 2 + 44; // headMot Offset=48
+        //long heading = byte2hex(data, idx, 4);
+
         idx = IDX_LEN + 2 + 48; // headVeh Offset=48
         long heading = byte2hex(data, idx, 4);
 
@@ -92,8 +100,10 @@ public class UbxHnrPvt extends UbxData implements Pvt {
         }
 
         Bundle bundle = fix.getExtras();
+        bundle.putFloat("PvtAccuracy", (float) (acc / 1000.0));
         bundle.putInt(FIX_STATUS_KEY, (int) status);
         //bundle.putInt(SBAS_STATUS_KEY, (int) flags & 0x02); DGNSSの状態とれない？
+        bundle.putDouble("Speed", speed / 100.0);
         fix.setExtras(bundle);
 
         return true;
