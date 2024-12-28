@@ -1,13 +1,15 @@
 package com.microntek.android.gps.usb.provider.ui;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v7.widget.SwitchCompat;
+import androidx.appcompat.widget.SwitchCompat;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -411,8 +413,8 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
             for (Integer key : svInfo.keySet()) {
                 HashMap<String, String> rec = svInfo.get(key);
 
-                int cno = Integer.parseInt(rec.get("cno"));
-                boolean hidden = Integer.parseInt(rec.get("disableCnt")) > 9;
+                int cno = parseInt(rec.get("cno"));
+                boolean hidden = parseInt(rec.get("disableCnt")) > 9;
                 View view = svinfoLayout.findViewById(key);
 
                 // 一定期間受信できなかったものは非表示
@@ -441,7 +443,7 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
                         svinfoLayout.addView(view, 0);
 
                     ImageView icon = (ImageView) view.findViewById(R.id.icon);
-                    icon.setImageResource(Integer.parseInt(rec.get("icon")));
+                    icon.setImageResource(parseInt(rec.get("icon")));
                     TextView svName = (TextView) view.findViewById(R.id.svName);
                     svName.setText(rec.get("svName"));
                     ProgressBar bar = (ProgressBar) view.findViewById(R.id.bar);
@@ -460,9 +462,9 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
                 bar.setProgress(cno);
 
                 if(rec.get("useFlag").equals("1"))
-                    bar.getProgressDrawable().setColorFilter(Color.GREEN, android.graphics.PorterDuff.Mode.SRC_IN);
+                    bar.getProgressDrawable().setColorFilter(Color.GREEN, PorterDuff.Mode.SRC_IN);
                 else
-                    bar.getProgressDrawable().setColorFilter(Color.BLUE, android.graphics.PorterDuff.Mode.SRC_IN);
+                    bar.getProgressDrawable().setColorFilter(Color.BLUE, PorterDuff.Mode.SRC_IN);
                 prevView = view;
             }
         } catch (Exception e) {
@@ -503,72 +505,53 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
         return true;
     }
 
+    @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_settings:
-                startActivity(new Intent(this, SettingsActivity.class));
-                return true;
-            case R.id.action_rec:
-//                // インテントの発行ではなく設定変更して、リスナーから検出させる
-                SharedPreferences.Editor edit = sharedPreferences.edit();
-                boolean enable = (!sharedPreferences.getBoolean(USBGpsProviderService.PREF_TRACK_RECORDING, false));
-                edit.putBoolean(USBGpsProviderService.PREF_TRACK_RECORDING, enable);
-                edit.apply();
-
-                return true;
-
-            case R.id.action_reset_odo:
-                {
-                    Intent intent = new Intent(this, USBGpsProviderService.class);
-                    intent.setAction(USBGpsProviderService.ACTION_RESET_ODO);
-                    startService(intent);
-                }
-                return true;
-
-            case R.id.action_reset_alg:
-            {
-                Intent intent = new Intent(this, USBGpsProviderService.class);
-                intent.setAction(USBGpsProviderService.ACTION_RESET_ALG);
-                startService(intent);
-            }
+        int id = item.getItemId();
+        if (id == R.id.action_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
             return true;
-
-            case R.id.action_debug_dr_enable:
-            {
-                Intent intent = new Intent(this, USBGpsProviderService.class);
-                intent.setAction(USBGpsProviderService.ACTION_DEBUG_DR_ENABLE);
-                startService(intent);
-            }
+        } else if (id == R.id.action_rec) {
+            SharedPreferences.Editor edit = sharedPreferences.edit();
+            boolean enable = (!sharedPreferences.getBoolean(USBGpsProviderService.PREF_TRACK_RECORDING, false));
+            edit.putBoolean(USBGpsProviderService.PREF_TRACK_RECORDING, enable);
+            edit.apply();
             return true;
-
-            case R.id.action_debug_dr_disable:
-            {
-                Intent intent = new Intent(this, USBGpsProviderService.class);
-                intent.setAction(USBGpsProviderService.ACTION_DEBUG_DR_DISABLE);
-                startService(intent);
-            }
+        } else if (id == R.id.action_reset_odo) {
+            Intent intent = new Intent(this, USBGpsProviderService.class);
+            intent.setAction(USBGpsProviderService.ACTION_RESET_ODO);
+            startService(intent);
             return true;
-
-            case R.id.action_mga_on:
-            {
-                Intent intent = new Intent(this, USBGpsProviderService.class);
-                intent.setAction(USBGpsProviderService.ACTION_MGA_ON);
-                startService(intent);
-            }
+        } else if (id == R.id.action_reset_alg) {
+            Intent intent = new Intent(this, USBGpsProviderService.class);
+            intent.setAction(USBGpsProviderService.ACTION_RESET_ALG);
+            startService(intent);
             return true;
-
-            case R.id.action_mga_off:
-            {
-                Intent intent = new Intent(this, USBGpsProviderService.class);
-                intent.setAction(USBGpsProviderService.ACTION_MGA_OFF);
-                startService(intent);
-            }
+        } else if (id == R.id.action_debug_dr_enable) {
+            Intent intent = new Intent(this, USBGpsProviderService.class);
+            intent.setAction(USBGpsProviderService.ACTION_DEBUG_DR_ENABLE);
+            startService(intent);
             return true;
-
+        } else if (id == R.id.action_debug_dr_disable) {
+            Intent intent = new Intent(this, USBGpsProviderService.class);
+            intent.setAction(USBGpsProviderService.ACTION_DEBUG_DR_DISABLE);
+            startService(intent);
+            return true;
+        } else if (id == R.id.action_mga_on) {
+            Intent intent = new Intent(this, USBGpsProviderService.class);
+            intent.setAction(USBGpsProviderService.ACTION_MGA_ON);
+            startService(intent);
+            return true;
+        } else if (id == R.id.action_mga_off) {
+            Intent intent = new Intent(this, USBGpsProviderService.class);
+            intent.setAction(USBGpsProviderService.ACTION_MGA_OFF);
+            startService(intent);
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
+
 
     @Override
     public void onNewSentence(String sentence) {

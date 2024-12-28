@@ -1,20 +1,34 @@
 apply plugin: 'com.android.application'
+
 android {
-    compileSdkVersion 26
-    buildToolsVersion '29.0.0 rc2'
+    compileSdkVersion 35
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+    // namespace を追加
+    namespace 'com.microntek.android.gps.usb.provider'
+
     defaultConfig {
         applicationId 'com.microntek.android.gps.usb.provider'
         minSdkVersion 23
-        targetSdkVersion 23
+        //noinspection EditedTargetSdkVersion
+        targetSdkVersion 35
         versionCode 5
-        versionName 'm8u_v2.0.0'
+        versionName 'm8u_v2.0.1'
         vectorDrawables.useSupportLibrary = true
         setProperty("archivesBaseName", "UsbGps4Droid-$versionName")
-        versionNameSuffix '_210221'
+        versionNameSuffix '_241228'
     }
 
-    applicationVariants.all { variant ->
-        variant.resValue "string", "version_name", variant.versionName
+    applicationVariants.configureEach { variant ->
+        // 正しいプロパティで処理
+        if (variant.buildType.name == "release") {
+            variant.resValue("string", "version_name", "${defaultConfig.versionName}${defaultConfig.versionNameSuffix}")
+        } else {
+            variant.resValue("string", "version_name", "${defaultConfig.versionName}_DEBUG")
+        }
     }
 
     buildTypes {
@@ -28,23 +42,33 @@ android {
         }
     }
 
-    lintOptions {
-        checkReleaseBuilds false
-        // Or, if you prefer, you can continue to check for errors in release builds,
-        // but continue the build even when errors are found:
-        abortOnError false
+    buildFeatures {
+        viewBinding = true
+        compose = true
+        buildConfig = true
     }
 
     productFlavors {
+        // 必要なら追加
+    }
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
     }
 }
 
 dependencies {
-    compile 'com.android.support:appcompat-v7:27.0.2'
-    compile 'com.android.support:design:27.0.2'
-    compile 'com.android.support:preference-v14:27.0.2'
-    compile 'com.android.support:support-vector-drawable:27.0.2'
-    compile 'com.android.support:cardview-v7:27.0.2'
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
-    compile 'com.android.volley:volley:1.1.1'
+    // androidx.appcompat などの AndroidX ライブラリを追加
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.preference:preference:1.2.1'
+    implementation 'androidx.vectordrawable:vectordrawable:1.2.0'
+    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
+    implementation 'com.android.volley:volley:1.2.1'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.core:core-ktx:1.15.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.preference:preference:1.2.1'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
 }

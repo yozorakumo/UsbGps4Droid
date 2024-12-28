@@ -34,6 +34,7 @@ import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.location.provider.ProviderProperties;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -134,8 +135,8 @@ public class NmeaParser {
                             true,
                             true,
                             true,
-                            Criteria.POWER_MEDIUM,
-                            Criteria.ACCURACY_FINE
+                            ProviderProperties.POWER_USAGE_HIGH,
+                            ProviderProperties.ACCURACY_FINE
                     );
 
                     if (force || (prov == null)) {
