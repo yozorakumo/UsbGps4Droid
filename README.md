@@ -3,12 +3,16 @@
  # UsbGps4Droid - For U-blox NEO-M8U
  
   Kamabokoz氏のU-blox NEO-M8U向けUsbGps4Droidを改修。
-  Android14対応中、依存関係更新。
-
+  Android14対応中、依存関係更新
 
   UBXバイナリを解析することで、NEO-M8U独自の高レートナビゲーションを疑似ロケーションに反映することができます。
   
   [Download latest release](../../releases)
+
+  ## 予定している機能
+  LSposedを使用しアプリ毎に任意のGPSリソースを使用できるようにする(magiskによるroot化が必要)
+  Android~15に対応
+  UIのレイアウト変更その他
   
   ## スクリーンショット
   ![main.png](screenshots/main.png "main")
