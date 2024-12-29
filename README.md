@@ -10,9 +10,9 @@
   [Download latest release](../../releases)
 
   ## 予定している機能
-  LSposedを使用しアプリ毎に任意のGPSリソースを使用できるようにする(magiskによるroot化が必要)
-  Android~15に対応
-  UIのレイアウト変更その他
+  *LSposedを使用しアプリ毎に任意のGPSリソースを使用できるようにする(magiskによるroot化が必要)
+  *Android~15に対応
+  *UIのレイアウト変更その他
   
   ## スクリーンショット
   ![main.png](screenshots/main.png "main")
