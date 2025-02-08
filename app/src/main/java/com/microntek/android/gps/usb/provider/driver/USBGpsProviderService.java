@@ -226,6 +226,7 @@ public class USBGpsProviderService extends Service implements USBGpsManager.UbxL
         super.onCreate();
     }
 
+    @SuppressLint("ForegroundServiceType")
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -269,7 +270,7 @@ public class USBGpsProviderService extends Service implements USBGpsManager.UbxL
                                     this,
                                     0,
                                     new Intent(this, GpsInfoActivity.class),
-                                    PendingIntent.FLAG_CANCEL_CURRENT
+                                    PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE
                             );
 
                     sharedPreferences

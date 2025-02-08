@@ -152,7 +152,7 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
 
     private void onDaynightModeChanged(boolean on) {
         AppCompatDelegate.setDefaultNightMode(on ?
-                AppCompatDelegate.MODE_NIGHT_AUTO:
+                AppCompatDelegate.MODE_NIGHT_AUTO_TIME:
                 AppCompatDelegate.MODE_NIGHT_YES
         );
         getActivity().recreate();
