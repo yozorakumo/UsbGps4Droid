@@ -10,6 +10,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import androidx.appcompat.widget.SwitchCompat;
+import com.microntek.android.gps.usb.provider.driver.USBGpsProviderService;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -526,26 +527,6 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
         } else if (id == R.id.action_reset_alg) {
             Intent intent = new Intent(this, USBGpsProviderService.class);
             intent.setAction(USBGpsProviderService.ACTION_RESET_ALG);
-            startService(intent);
-            return true;
-        } else if (id == R.id.action_debug_dr_enable) {
-            Intent intent = new Intent(this, USBGpsProviderService.class);
-            intent.setAction(USBGpsProviderService.ACTION_DEBUG_DR_ENABLE);
-            startService(intent);
-            return true;
-        } else if (id == R.id.action_debug_dr_disable) {
-            Intent intent = new Intent(this, USBGpsProviderService.class);
-            intent.setAction(USBGpsProviderService.ACTION_DEBUG_DR_DISABLE);
-            startService(intent);
-            return true;
-        } else if (id == R.id.action_mga_on) {
-            Intent intent = new Intent(this, USBGpsProviderService.class);
-            intent.setAction(USBGpsProviderService.ACTION_MGA_ON);
-            startService(intent);
-            return true;
-        } else if (id == R.id.action_mga_off) {
-            Intent intent = new Intent(this, USBGpsProviderService.class);
-            intent.setAction(USBGpsProviderService.ACTION_MGA_OFF);
             startService(intent);
             return true;
         }

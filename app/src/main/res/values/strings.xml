@@ -149,6 +149,9 @@
     <string name="about_copyright_4">Copyright (C) 2011-2013 UsbGPS4Droid Project</string>
     <string name="about_copyright_5">Copyright (C) 2018-2019 Kamabokoz</string>
     <string name="about_app_desc">Usb GPS for Android is an application
+    <string name="pref_lsposed_allowed_apps_title">LSposed Allowed Apps</string>
+    <string name="pref_lsposed_allowed_apps_summary">Select apps that are allowed to use mock location in LSposed mode</string>
+    <string name="pref_lsposed_allowed_apps_dialog_title">Allowed Apps</string>
                                     for using an external usb GPS on Android devices.
     </string>
     <string name="about_license">It is open source software 
@@ -233,5 +236,15 @@
     <string name="pref_daynight_theme_title">Automatic day-night app theme</string>
     <string name="pref_daynight_theme_summary">Show light theme during daytime and dark theme at night</string>
     <string name="pref_daynight_theme_key">dayNightMode</string>
-
+    <string name="pref_mock_location_method_title">Mock Location Method</string>
+    <string name="pref_mock_location_method_summary">Select the method for mock location</string>
+    <string-array name="pref_mock_location_method_entries">
+        <item>Legacy (Developer Mode Mock Location)</item>
+        <item>LSposed</item>
+    </string-array>
+    <string-array name="pref_mock_location_method_values">
+        <item>legacy</item>
+        <item>lsposed</item>
+    </string-array>
+    <string name="pref_mock_location_method_key">mockLocationMethod</string>
 </resources>

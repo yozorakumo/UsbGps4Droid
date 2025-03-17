@@ -1,27 +1,6 @@
-/*
- * Copyright (C) 2016 Oliver Bell
- * Copyright (C) 2010, 2011, 2012 Herbert von Broeuschmeul
- * Copyright (C) 2010, 2011, 2012 BluetoothGPS4Droid Project
- * Copyright (C) 2011, 2012 UsbGPS4Droid Project
- * 
- * This file is part of UsbGPS4Droid.
- *
- * UsbGPS4Droid is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * UsbGPS4Droid is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- *  You should have received a copy of the GNU General Public License
- *  along with UsbGPS4Droid. If not, see <http://www.gnu.org/licenses/>.
- */
-
 package com.microntek.android.gps.usb.provider.ui;
 
+import com.microntek.android.gps.usb.provider.driver.USBGpsProviderService;
 import java.util.HashMap;
 
 import android.app.Activity;
@@ -53,15 +32,17 @@ import android.widget.TextView;
 
 import com.microntek.android.gps.usb.provider.BuildConfig;
 import com.microntek.android.gps.usb.provider.R;
-import com.microntek.android.gps.usb.provider.driver.USBGpsProviderService;
 import com.microntek.android.gps.usb.provider.util.SuperuserManager;
+
+import static android.content.Intent.ACTION_SCREEN_OFF;
 
 /**
  * A Preference Fragment Class used to configure the provider
  *
  * Starting any services will trigger events in the base usb gps activities
  *
- * @author Herbert von Broeuschmeul
+ * @author Herbert von Broeuschmeul &amp;
+ * @author Oliver Bell
  */
 public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
         OnPreferenceChangeListener, OnSharedPreferenceChangeListener {
@@ -136,8 +117,8 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         addPreferencesFromResource(R.xml.main_prefs);
 
-        devicePreference = (ListPreference) findPreference(USBGpsProviderService.PREF_GPS_DEVICE);
-        deviceSpeedPreference = (ListPreference) findPreference(USBGpsProviderService.PREF_GPS_DEVICE_SPEED);
+        devicePreference = (ListPreference) findPreference(getString(R.string.pref_gps_device_key));
+        deviceSpeedPreference = (ListPreference) findPreference(com.microntek.android.gps.usb.provider.driver.USBGpsProviderService.PREF_GPS_DEVICE_SPEED);
         devicePreference.setOnPreferenceChangeListener(this);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -159,7 +140,14 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
     }
 
     private void setupNestedPreferences() {
-        findPreference(USBGpsProviderService.PREF_ABOUT).setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+//        findPreference(com.microntek.android.gps.usb.provider.driver.USBGpsProviderService.PREF_ABOUT).setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+//            @Override
+//            public boolean onPreferenceClick(Preference preference) {
+//                displayAboutDialog();
+//                return true;
+//            }
+//        });
+        findPreference(getString(R.string.pref_about_key)).setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
             @Override
             public boolean onPreferenceClick(Preference preference) {
                 displayAboutDialog();
@@ -191,23 +179,23 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
 
         findPreference(getString(R.string.pref_recording_screen_key))
                 .setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                    @Override
-                    public boolean onPreferenceClick(Preference preference) {
-                        if (callback != null) {
-                            callback.onNestedScreenClicked(new RecordingPreferences());
-                        }
-                        return false;
-                    }
-                });
+            @Override
+            public boolean onPreferenceClick(Preference preference) {
+                if (callback != null) {
+                    callback.onNestedScreenClicked(new RecordingPreferences());
+                }
+                return false;
+            }
+        });
 
         findPreference(getString(R.string.pref_daynight_theme_key))
                 .setOnPreferenceChangeListener(new OnPreferenceChangeListener() {
-                    @Override
-                    public boolean onPreferenceChange(Preference preference, Object newValue) {
-                        onDaynightModeChanged((boolean) newValue);
-                        return true;
-                    }
-                });
+            @Override
+            public boolean onPreferenceChange(Preference preference, Object newValue) {
+                onDaynightModeChanged((boolean) newValue);
+                return true;
+            }
+        });
     }
 
     @Override
@@ -239,7 +227,7 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
         usbCheckThread.start();
 
         final CheckBoxPreference timePreference =
-                (CheckBoxPreference) findPreference(USBGpsProviderService.PREF_SET_TIME);
+                (CheckBoxPreference) findPreference(com.microntek.android.gps.usb.provider.driver.USBGpsProviderService.PREF_SET_TIME);
 
         if (!SuperuserManager.getInstance().hasPermission() && timePreference.isChecked()) {
             SuperuserManager.getInstance().request(new SuperuserManager.permissionListener() {
@@ -258,6 +246,13 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
                 }
             });
         }
+
+        updateDevicePreferenceList();
+        updateDevicesList();
+        updateDevicePreferenceList();
+        updateDevicesList();
+        updateDevicePreferenceList();
+        updateDevicesList();
 
         updateDevicePreferenceList();
         updateDevicesList();
@@ -297,7 +292,7 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
             deviceSpeedPreference.setSummary(getString(
                     R.string.pref_gps_device_speed_summary,
                     sharedPreferences.getString(
-                            USBGpsProviderService.PREF_GPS_DEVICE_SPEED, getString(R.string.defaultGpsDeviceSpeed))
+                            com.microntek.android.gps.usb.provider.driver.USBGpsProviderService.PREF_GPS_DEVICE_SPEED, getString(R.string.defaultGpsDeviceSpeed))
                     )
             );
         }
@@ -368,7 +363,7 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
     private void updateDevicePreferenceList() {
         Preference pref;
 
-        String mockProvider = sharedPreferences.getString(USBGpsProviderService.PREF_MOCK_GPS_NAME, getString(R.string.defaultMockGpsName));
+        String mockProvider = sharedPreferences.getString(com.microntek.android.gps.usb.provider.driver.USBGpsProviderService.PREF_MOCK_GPS_NAME, getString(R.string.defaultMockGpsName));
 
         // update usb device summary
         updateDevicePreferenceSummary();
@@ -376,7 +371,7 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
         // update usb device list
         updateDevicesList();
 
-        pref = findPreference(USBGpsProviderService.PREF_GPS_LOCATION_PROVIDER);
+        pref = findPreference(getString(R.string.pref_gps_location_provider_key));
         if (sharedPreferences.getBoolean(USBGpsProviderService.PREF_REPLACE_STD_GPS, true)) {
             String s = getString(R.string.pref_gps_location_provider_summary);
             pref.setSummary(s);
@@ -390,6 +385,8 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
         //BaseAdapter adapter = (BaseAdapter) getPreferenceScreen().getRootAdapter();
         //adapter.notifyDataSetChanged();
     }
+
+
 
     private void displayAboutDialog() {
         View messageView = getActivity().getLayoutInflater().inflate(R.layout.about, null, false);
@@ -419,7 +416,7 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) {
 
-        if (preference.getKey().equals(USBGpsProviderService.PREF_GPS_DEVICE)) {
+        if (preference.getKey().equals(getString(R.string.pref_gps_device_key))) {
             String deviceName = (String) newValue;
 
             log("Device clicked: " + newValue);
@@ -450,74 +447,73 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
     public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
         log("Shared preferences changed: " + key);
 
-        switch(key) {
-            case USBGpsProviderService.PREF_START_GPS_PROVIDER: {
-                boolean val = sharedPreferences.getBoolean(key, false);
-                SwitchPreference pref = (SwitchPreference)
-                        findPreference(USBGpsProviderService.PREF_START_GPS_PROVIDER);
+        if (key.equals(com.microntek.android.gps.usb.provider.driver.USBGpsProviderService.PREF_START_GPS_PROVIDER)) {
+            boolean val = sharedPreferences.getBoolean(key, false);
+            SwitchPreference pref = (SwitchPreference)
+                    findPreference(com.microntek.android.gps.usb.provider.driver.USBGpsProviderService.PREF_START_GPS_PROVIDER);
 
-                if (pref.isChecked() != val) {
-                    pref.setChecked(val);
-                    return;
+            if (pref.isChecked() != val) {
+                pref.setChecked(val);
+                return;
+            }
+        } else if (key.equals(com.microntek.android.gps.usb.provider.driver.USBGpsProviderService.PREF_TRACK_RECORDING)) {
+            boolean val = sharedPreferences.getBoolean(key, false);
+            SwitchPreference pref = (SwitchPreference)
+                    findPreference(com.microntek.android.gps.usb.provider.driver.USBGpsProviderService.PREF_TRACK_RECORDING);
+
+            if (pref.isChecked() != val) {
+                pref.setChecked(val);
+                return;
+            }
+        } else if (key.equals(getString(R.string.pref_gps_device_key))) {
+            updateDevicePreferenceSummary();
+
+        } else if (key.equals(com.microntek.android.gps.usb.provider.driver.USBGpsProviderService.PREF_GPS_DEVICE_SPEED)) {
+            updateDevicePreferenceSummary();
+
+        } else if (key.equals(com.microntek.android.gps.usb.provider.driver.USBGpsProviderService.PREF_SET_TIME)) {
+            if (sharedPreferences.getBoolean(key, false)) {
+                SuperuserManager suManager = SuperuserManager.getInstance();
+                if (!suManager.hasPermission()) {
+                    ((CheckBoxPreference) findPreference(key)).setChecked(false);
+
+                    suManager.request(new SuperuserManager.permissionListener() {
+                        @Override
+                        public void onGranted() {
+                            new Handler(getActivity().getMainLooper()).post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    ((CheckBoxPreference) findPreference(key)).setChecked(true);
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onDenied() {
+                            new Handler(getActivity().getMainLooper()).post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    new AlertDialog.Builder(getActivity())
+                                            .setMessage(R.string.warning_set_time_needs_su)
+                                            .setPositiveButton(android.R.string.ok, null)
+                                            .show();
+                                }
+                            });
+                        }
+                    });
                 }
-                break;
             }
 
-            case USBGpsProviderService.PREF_TRACK_RECORDING: {
-                boolean val = sharedPreferences.getBoolean(key, false);
-                SwitchPreference pref = (SwitchPreference)
-                        findPreference(USBGpsProviderService.PREF_TRACK_RECORDING);
-
-                if (pref.isChecked() != val) {
-                    pref.setChecked(val);
-                    return;
-                }
-                break;
-            }
-
-            case USBGpsProviderService.PREF_GPS_DEVICE:
-                updateDevicePreferenceSummary();
-                break;
-
-            case USBGpsProviderService.PREF_GPS_DEVICE_SPEED:
-                updateDevicePreferenceSummary();
-                break;
-
-            case USBGpsProviderService.PREF_SET_TIME:
-                if (sharedPreferences.getBoolean(key, false)) {
-                    SuperuserManager suManager = SuperuserManager.getInstance();
-                    if (!suManager.hasPermission()) {
-                        ((CheckBoxPreference) findPreference(key)).setChecked(false);
-
-                        suManager.request(new SuperuserManager.permissionListener() {
-                            @Override
-                            public void onGranted() {
-                                new Handler(getActivity().getMainLooper()).post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        ((CheckBoxPreference) findPreference(key)).setChecked(true);
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void onDenied() {
-                                new Handler(getActivity().getMainLooper()).post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        new AlertDialog.Builder(getActivity())
-                                                .setMessage(R.string.warning_set_time_needs_su)
-                                                .setPositiveButton(android.R.string.ok, null)
-                                                .show();
-                                    }
-                                });
-                            }
-                        });
-                    }
-                }
-                break;
+        } else if (key.equals(com.microntek.android.gps.usb.provider.driver.USBGpsProviderService.PREF_MOCK_LOCATION_METHOD)) {
+            String mockLocationMethod = sharedPreferences.getString(key, "legacy");
+            log("Mock Location Method changed to: " + mockLocationMethod);
+            Intent intent = new Intent(getActivity(), USBGpsProviderService.class);
+            intent.setAction(USBGpsProviderService.ACTION_SET_MOCK_LOCATION_METHOD);
+            intent.putExtra(USBGpsProviderService.EXTRA_MOCK_LOCATION_METHOD, mockLocationMethod);
+            getActivity().startService(intent);
         }
     }
+
 
     @Override
     public void onDestroy() {
@@ -549,9 +545,9 @@ public class USBGpsSettingsFragment extends PreferenceFragmentCompat implements
             Preference pref = findPreference(USBGpsProviderService.PREF_MOCK_GPS_NAME);
             pref.setSummary(getString(R.string.pref_mock_gps_name_summary, mockProvider));
 
-            pref = findPreference(USBGpsProviderService.PREF_CONNECTION_RETRIES);
+            pref = findPreference(getString(R.string.pref_connection_retries_key));
 
-            String maxConnRetries = sharedPreferences.getString(USBGpsProviderService.PREF_CONNECTION_RETRIES, getString(R.string.defaultConnectionRetries));
+            String maxConnRetries = sharedPreferences.getString(getString(R.string.pref_connection_retries_key), getString(R.string.defaultConnectionRetries));
             pref.setSummary(getString(R.string.pref_connection_retries_summary, maxConnRetries));
         }
     }
